@@ -1,4 +1,4 @@
-package com.thevery.yamblz.api;
+package com.rxsinukov.yamblz.api;
 
 /*
 {
