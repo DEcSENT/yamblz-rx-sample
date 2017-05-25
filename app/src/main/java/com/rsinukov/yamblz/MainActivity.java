@@ -8,6 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.jakewharton.rxbinding.widget.RxAdapterView;
 import com.jakewharton.rxbinding.widget.RxTextView;
@@ -68,18 +69,36 @@ public class MainActivity extends AppCompatActivity {
                 .debounce(400, TimeUnit.MILLISECONDS, AndroidSchedulers.mainThread())
                 .filter(text -> text.length() > 0)
                 .map(CharSequence::toString)
-                .distinctUntilChanged();
+                .distinctUntilChanged()
+                .doOnNext(text -> Log.d(TAG, "text changed " + text));
 
         final Observable<String> langObservable = RxAdapterView.itemSelections(languageSpinner)
                 .map(languagesAdapter::getItem)
-                .distinctUntilChanged();
+                .distinctUntilChanged()
+                .doOnNext(item -> Log.d(TAG, "lang changed " + item));
 
-        final Subscription subscription = Observable.combineLatest(textObservable, langObservable, Pair::create)
+        final Subscription subscription = Observable
+                .combineLatest(
+                        textObservable,
+                        langObservable,
+                        Pair::create
+                )
                 .observeOn(Schedulers.io())
                 .flatMapSingle(pair -> translateApi.translate(YANDEX_API_KEY, pair.first, pair.second))
-                .doOnError(error -> Log.e(TAG, "translation error", error))
-                .map(response -> response.text[0])
                 .observeOn(AndroidSchedulers.mainThread())
+                .doOnError(error -> {
+                    Log.e(TAG, "translation error", error);
+                    Toast.makeText(this, "Translation error", Toast.LENGTH_SHORT).show();
+                })
+                .retryWhen(error -> error.switchMap(
+                        e -> Observable.merge(
+                                RxTextView.textChanges(originalField).skip(1)
+                                        .doOnNext(text -> Log.d(TAG, "error text " + text)),
+                                RxAdapterView.itemSelections(languageSpinner).skip(1)
+                                        .doOnNext(text -> Log.d(TAG, "error lang " + text))
+                        )
+                ))
+                .map(response -> response.text[0])
                 .subscribe(translation -> translateLabel.setText(translation));
         compositeSubscription.add(subscription);
     }
