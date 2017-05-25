@@ -38,8 +38,7 @@ public class MainActivity extends AppCompatActivity {
                 RxTextView.textChanges(usernameField).map(this::isLoginValid),
                 RxTextView.textChanges(passwordField).map(this::isPasswordValid),
                 (loginValid, pwdValid) -> loginValid && pwdValid
-        )
-                .subscribe(valid -> loginButton.setEnabled(valid));
+        ).subscribe(valid -> loginButton.setEnabled(valid));
     }
 
     private boolean isLoginValid(CharSequence login) {
