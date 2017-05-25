@@ -81,7 +81,7 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(error -> Toast.makeText(this, "Translation error", Toast.LENGTH_SHORT).show())
                 .retryWhen(error -> error
-                        .switchMap(e -> Observable.merge(RxTextView.textChanges(originalField).skip(1), RxAdapterView.itemSelections(languageSpinner).skip(1)))
+                        .flatMap(e -> Observable.merge(RxTextView.textChanges(originalField).skip(1), RxAdapterView.itemSelections(languageSpinner).skip(1)))
                 )
                 .map(response -> response.text[0])
                 .subscribe(translation -> translateLabel.setText(translation));
@@ -96,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
             final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
             interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             retrofitClientBuilder.addInterceptor(interceptor);
-            retrofitClientBuilder.addNetworkInterceptor(interceptor);
         }
 
         final Retrofit retrofit = new Retrofit.Builder()
