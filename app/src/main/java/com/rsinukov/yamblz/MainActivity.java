@@ -60,10 +60,12 @@ public class MainActivity extends AppCompatActivity {
         languageSpinner.setAdapter(languagesAdapter);
 
         initRetrofit();
-        initSubsription(languagesAdapter);
+        initSubscription(languagesAdapter);
     }
 
-    private void initSubsription(ArrayAdapter<String> languagesAdapter) {
+    private void initSubscription(ArrayAdapter<String> languagesAdapter) {
+        final Cache cache = new Cache();
+
         final Observable<String> textObservable = RxTextView.textChanges(originalField)
                 .debounce(400, TimeUnit.MILLISECONDS, AndroidSchedulers.mainThread())
                 .filter(text -> text.length() > 0)
@@ -77,13 +79,19 @@ public class MainActivity extends AppCompatActivity {
         final Subscription subscription = Observable
                 .combineLatest(textObservable, langObservable, Pair::create)
                 .observeOn(Schedulers.io())
-                .flatMapSingle(pair -> translateApi.translate(YANDEX_API_KEY, pair.first, pair.second))
+                .flatMapSingle(pair ->
+                        Observable.concat(
+                                cache.readFromCache(pair.first, pair.second),
+                                translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
+                                        .flatMap(response -> cache.saveToCache(pair.first, pair.second, response.text[0]))
+                                        .toObservable()
+                        ).first().toSingle()
+                )
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(error -> Toast.makeText(this, "Translation error", Toast.LENGTH_SHORT).show())
                 .retryWhen(error -> error
                         .flatMap(e -> Observable.merge(RxTextView.textChanges(originalField).skip(1), RxAdapterView.itemSelections(languageSpinner).skip(1)))
                 )
-                .map(response -> response.text[0])
                 .subscribe(translation -> translateLabel.setText(translation));
         compositeSubscription.add(subscription);
     }
