@@ -8,30 +8,25 @@
     android:orientation="vertical"
     tools:context="com.rsinukov.yamblz.MainActivity">
 
-    <LinearLayout
+    <EditText
+        android:id="@+id/username"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:layout_margin="8dp"
+        android:hint="userName" />
 
-        <EditText
-            android:id="@+id/main_original_field"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="8dp"
-            android:layout_weight="1"
-            android:text="Hello World!" />
+    <EditText
+        android:id="@+id/password"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:hint="password" />
 
-        <Spinner
-            android:id="@+id/main_language_spinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-    </LinearLayout>
-
-
-    <TextView
-        android:id="@+id/main_translate_label"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-
+    <Button
+        android:id="@+id/login"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="8dp"
+        android:enabled="false"
+        android:text="register" />
 </LinearLayout>
