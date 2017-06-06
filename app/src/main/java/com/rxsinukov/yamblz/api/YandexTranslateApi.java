@@ -1,5 +1,6 @@
 package com.rxsinukov.yamblz.api;
 
+import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 import rx.Single;
@@ -13,6 +14,13 @@ public interface YandexTranslateApi {
 
     @GET("translate")
     Single<YandexTranslateReponse> translate(
+            @Query("key") String key,
+            @Query("text") String text,
+            @Query("lang") String lang
+    );
+
+    @GET("translate")
+    Call<YandexTranslateReponse> translateOldStyle(
             @Query("key") String key,
             @Query("text") String text,
             @Query("lang") String lang

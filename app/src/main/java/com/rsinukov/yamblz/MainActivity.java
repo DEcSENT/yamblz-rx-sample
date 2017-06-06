@@ -17,17 +17,13 @@ import java.util.concurrent.TimeUnit;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Retrofit;
-import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
-import retrofit2.converter.jackson.JacksonConverterFactory;
 import rx.Observable;
 import rx.Subscription;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.schedulers.Schedulers;
 import rx.subscriptions.CompositeSubscription;
 
+import static com.rsinukov.yamblz.Utils.initRetrofit;
 import static com.rxsinukov.yamblz.api.YandexTranslateApi.YANDEX_API_KEY;
 
 public class MainActivity extends AppCompatActivity {
@@ -59,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
                 = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, LANGUAGES);
         languageSpinner.setAdapter(languagesAdapter);
 
-        initRetrofit();
+        translateApi = initRetrofit();
         initSubscription(languagesAdapter);
     }
 
@@ -83,7 +79,10 @@ public class MainActivity extends AppCompatActivity {
                         Observable.concat(
                                 cache.readFromCache(pair.first, pair.second),
                                 translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
-                                        .flatMap(response -> cache.saveToCache(pair.first, pair.second, response.text[0]))
+                                        .doOnSuccess(response -> cache.saveToCache(pair.first, pair.second, response.text[0])
+                                                .subscribeOn(Schedulers.io())
+                                                .subscribe())
+                                        .map(response -> response.text[0])
                                         .toObservable()
                         ).first().toSingle()
                 )
@@ -94,26 +93,6 @@ public class MainActivity extends AppCompatActivity {
                 )
                 .subscribe(translation -> translateLabel.setText(translation));
         compositeSubscription.add(subscription);
-    }
-
-    private void initRetrofit() {
-        final OkHttpClient client = new OkHttpClient();
-        final OkHttpClient.Builder retrofitClientBuilder = client.newBuilder();
-
-        if (BuildConfig.DEBUG) {
-            final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
-            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-            retrofitClientBuilder.addInterceptor(interceptor);
-        }
-
-        final Retrofit retrofit = new Retrofit.Builder()
-                .addCallAdapterFactory(RxJavaCallAdapterFactory.create())
-                .addConverterFactory(JacksonConverterFactory.create())
-                .baseUrl("https://translate.yandex.net/api/v1.5/tr.json/")
-                .client(retrofitClientBuilder.build())
-                .build();
-
-        translateApi = retrofit.create(YandexTranslateApi.class);
     }
 
     @Override

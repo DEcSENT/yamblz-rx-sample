@@ -3,8 +3,8 @@ package com.rsinukov.yamblz;
 import android.support.v4.util.LruCache;
 import android.support.v4.util.Pair;
 
+import rx.Completable;
 import rx.Observable;
-import rx.Single;
 
 public class Cache {
 
@@ -21,8 +21,8 @@ public class Cache {
         });
     }
 
-    public Single<String> saveToCache(String text, String lang, String translation) {
-        return Single.fromCallable(() -> {
+    public Completable saveToCache(String text, String lang, String translation) {
+        return Completable.fromCallable(() -> {
             cache.put(Pair.create(text, lang), translation);
             return translation;
         });
