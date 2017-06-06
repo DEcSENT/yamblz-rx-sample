@@ -7,7 +7,6 @@ import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.jakewharton.rxbinding.widget.RxAdapterView;
 import com.jakewharton.rxbinding.widget.RxTextView;
@@ -60,8 +59,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initSubscription(ArrayAdapter<String> languagesAdapter) {
-        final Cache cache = new Cache();
-
         final Observable<String> textObservable = RxTextView.textChanges(originalField)
                 .debounce(400, TimeUnit.MILLISECONDS, AndroidSchedulers.mainThread())
                 .filter(text -> text.length() > 0)
@@ -75,22 +72,10 @@ public class MainActivity extends AppCompatActivity {
         final Subscription subscription = Observable
                 .combineLatest(textObservable, langObservable, Pair::create)
                 .observeOn(Schedulers.io())
-                .flatMapSingle(pair ->
-                        Observable.concat(
-                                cache.readFromCache(pair.first, pair.second),
-                                translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
-                                        .doOnSuccess(response -> cache.saveToCache(pair.first, pair.second, response.text[0])
-                                                .subscribeOn(Schedulers.io())
-                                                .subscribe())
-                                        .map(response -> response.text[0])
-                                        .toObservable()
-                        ).first().toSingle()
+                .flatMapSingle(pair -> translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
+                                .map(response -> response.text[0])
                 )
                 .observeOn(AndroidSchedulers.mainThread())
-                .doOnError(error -> Toast.makeText(this, "Translation error", Toast.LENGTH_SHORT).show())
-                .retryWhen(error -> error
-                        .flatMap(e -> Observable.merge(RxTextView.textChanges(originalField).skip(1), RxAdapterView.itemSelections(languageSpinner).skip(1)))
-                )
                 .subscribe(translation -> translateLabel.setText(translation));
         compositeSubscription.add(subscription);
     }
