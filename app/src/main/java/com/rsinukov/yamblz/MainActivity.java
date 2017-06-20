@@ -2,6 +2,7 @@ package com.rsinukov.yamblz;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 
@@ -42,10 +43,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean isLoginValid(CharSequence login) {
+        Log.d(TAG, "checking login");
         return login.length() >= 3;
     }
 
     private boolean isPasswordValid(CharSequence password) {
+        Log.d(TAG, "checking password");
         return password.length() >= 5;
     }
 }
