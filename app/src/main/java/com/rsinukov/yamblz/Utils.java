@@ -1,5 +1,7 @@
 package com.rsinukov.yamblz;
 
+import android.util.Log;
+
 import com.rxsinukov.yamblz.api.YandexTranslateApi;
 
 import okhttp3.OkHttpClient;
@@ -15,7 +17,7 @@ public class Utils {
         final OkHttpClient.Builder retrofitClientBuilder = client.newBuilder();
 
         if (BuildConfig.DEBUG) {
-            final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor();
+            final HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(message -> Log.d("RETROFIT", message));
             interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
             retrofitClientBuilder.addInterceptor(interceptor);
         }
