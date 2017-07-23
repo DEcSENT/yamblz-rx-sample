@@ -50,8 +50,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        final ArrayAdapter<String> languagesAdapter
-                = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, LANGUAGES);
+        ArrayAdapter<String> languagesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, LANGUAGES);
         languageSpinner.setAdapter(languagesAdapter);
 
         translateApi = initRetrofit();
@@ -59,17 +58,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void initSubscription(ArrayAdapter<String> languagesAdapter) {
-        final Observable<String> textObservable = RxTextView.textChanges(originalField)
+        Observable<String> textObservable = RxTextView.textChanges(originalField)
                 .debounce(400, TimeUnit.MILLISECONDS, AndroidSchedulers.mainThread())
                 .filter(text -> text.length() > 0)
                 .map(CharSequence::toString)
                 .distinctUntilChanged();
 
-        final Observable<String> langObservable = RxAdapterView.itemSelections(languageSpinner)
+        Observable<String> langObservable = RxAdapterView.itemSelections(languageSpinner)
                 .map(languagesAdapter::getItem)
                 .distinctUntilChanged();
 
-        final Subscription subscription = Observable
+        Subscription subscription = Observable
                 .combineLatest(textObservable, langObservable, Pair::create)
                 .observeOn(Schedulers.io())
                 .flatMapSingle(pair -> translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
