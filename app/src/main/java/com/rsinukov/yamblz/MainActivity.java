@@ -78,9 +78,10 @@ public class MainActivity extends AppCompatActivity {
                                 cache.readFromCache(pair.first, pair.second),
                                 translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
                                         .map(response -> response.text[0])
-                                        .doOnSuccess(translation -> cache.saveToCache(pair.first, pair.second, translation)
-                                                .subscribeOn(Schedulers.io())
-                                                .subscribe()
+                                        .doOnSuccess(translation ->
+                                                cache.saveToCache(pair.first, pair.second, translation)
+                                                        .subscribeOn(Schedulers.io())
+                                                        .subscribe()
                                         )
                                         .toObservable()
                         ).first().toSingle()
