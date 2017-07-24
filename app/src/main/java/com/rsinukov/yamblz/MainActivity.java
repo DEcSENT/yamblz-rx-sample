@@ -51,7 +51,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        ArrayAdapter<String> languagesAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, LANGUAGES);
+        ArrayAdapter<String> languagesAdapter =
+                new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item, LANGUAGES);
         languageSpinner.setAdapter(languagesAdapter);
 
         translateApi = initRetrofit();
@@ -78,9 +79,10 @@ public class MainActivity extends AppCompatActivity {
                         Observable.concat(
                                 cache.readFromCache(pair.first, pair.second),
                                 translateApi.translate(YANDEX_API_KEY, pair.first, pair.second)
-                                        .doOnSuccess(response -> cache.saveToCache(pair.first, pair.second, response.text[0])
-                                                .subscribeOn(Schedulers.io())
-                                                .subscribe())
+                                        .doOnSuccess(response ->
+                                                cache.saveToCache(pair.first, pair.second, response.text[0])
+                                                        .subscribeOn(Schedulers.io())
+                                                        .subscribe())
                                         .map(response -> response.text[0])
                                         .toObservable()
                         ).first().toSingle()
@@ -88,7 +90,10 @@ public class MainActivity extends AppCompatActivity {
                 .observeOn(AndroidSchedulers.mainThread())
                 .doOnError(error -> Toast.makeText(this, "Translation error", Toast.LENGTH_SHORT).show())
                 .retryWhen(error -> error
-                        .flatMap(e -> Observable.merge(RxTextView.textChanges(originalField).skip(1), RxAdapterView.itemSelections(languageSpinner).skip(1)))
+                        .flatMap(e -> Observable.merge(
+                                RxTextView.textChanges(originalField).skip(1),
+                                RxAdapterView.itemSelections(languageSpinner).skip(1))
+                        )
                 )
                 .subscribe(translation -> translateLabel.setText(translation));
         compositeSubscription.add(subscription);
